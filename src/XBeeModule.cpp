@@ -21,10 +21,19 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
- 
+
+#include <cstring>
+#include <iostream>
+#include <functional>
+
 #include <XBeeModule.h>
+#include <XBeeMessage.h>
 
 XBeeModule::XBeeModule(std::string type, std::string device, uint32_t baud) {
+    
+    /* series 1 is 100 bytes, series 2 is 72 bytes. this is required so that
+     * we can send a larger payload in multiple packets. */
+    max_packet_length = type == "xbeeZB" ? 72 : 100;
     
     last_error = xbee_setup(&xbee, type.c_str(), device.c_str(), baud);
 }
@@ -48,16 +57,28 @@ std::string XBeeModule::get_last_error_str() const {
 }
 
 void XBeeModule::open_connection(std::string mode,
-                                 xbee_conAddress* address,
+                                 uint64_t address,
                                  rx_handler_f callback) {
                                      
-    last_error = xbee_conNew(xbee, &xbee_connection, mode.c_str(), address);
+    /* convert address into xbee_conAddress structure */
+    struct xbee_conAddress dest_addr;
+    memset(&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.addr64_enabled = 1;
     
-    if (last_error == XBEE_ENONE && callback != nullptr)
+    /* get each byte from address into the struct */
+    for (auto i = 7; i >= 0; i--) {
+        
+        dest_addr.addr64[i] = (unsigned char)(address & 0xFF);
+        address >>= 8;
+    }
+     
+    last_error = xbee_conNew(xbee, &xbee_connection, mode.c_str(), &dest_addr);
+    
+    if (last_error == XBEE_ENONE)
         xbee_conCallbackSet(xbee_connection, callback, nullptr);
 }
 
-void XBeeModule::tx(std::string msg) {
+void XBeeModule::tx(XBeeMessage& msg) {
     
-    last_error = xbee_conTx(xbee_connection, &retval, msg.c_str());
+    // TODO: write this
 }

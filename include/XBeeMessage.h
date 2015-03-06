@@ -1,0 +1,101 @@
+/* File     : XBeeMessage.h
+ * Author(s): Tekin Ozbek <tekin@tekinozbek.com>
+ * 
+ * 
+ * XBLink - Networking between two computers using XBee modules.
+ * 
+ * Copyright (C) 2015 Tekin Ozbek <tekin@tekinozbek.com>,
+ *                    Benjamin Yan <benjamin.yan@carleton.ca>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#ifndef XBLINK_XBEEMESSAGE_H
+#define XBLINK_XBEEMESSAGE_H
+
+#include <memory>
+
+class XBeeMessage {
+    
+    public:
+        /* CONSTRUCTOR
+         *      XBeeMessage
+         * 
+         * DESCRIPTION
+         *      Allocates length for the buffer.
+         * 
+         * PARAMETERS
+         *      length      Number of expected bytes for this message. Memory will
+         *                  be allocated for this amount.
+         */
+        XBeeMessage(uint32_t length);
+        
+        /* DESTRUCTOR
+         *      ~XBeeMessage
+         * 
+         * DESCRIPTION
+         *      Deallocates buffer memory.
+         */
+        ~XBeeMessage();
+        
+        /* FUNCTION
+         *      write
+         * 
+         * DESCRIPTION
+         *      Writes 'n' data starting from position 'pos'.
+         * 
+         * PARAMETERS
+         *      buf     The buffer that the data will be taken from.
+         *      pos     The position in the message where writing will begin.
+         *      n       Number of bytes to copy from buf to this message.
+         */
+        void write(const unsigned char* buf, uint32_t pos, uint32_t n);
+        
+        /* FUNCTION
+         *      get_buffer
+         * 
+         * RETURN VALUE
+         *      Returns pointer to the buffer.
+         */
+        const unsigned char* get_buffer() const;
+        
+        /* FUNCTION
+         *      get_length
+         * 
+         * RETURN VALUE
+         *      Returns the expected length of the message.
+         */
+        uint32_t get_length() const;
+        
+        /* FUNCTION
+         *      get_bytes_received
+         * 
+         * RETURN VALUE
+         *      Returns the number of bytes received. This value may be less
+         *      than length if the message is part of a multipart sequence that
+         *      has not fully arrived yet.
+         */
+        uint32_t get_bytes_received() const;
+        
+        XBeeMessage() = delete;
+
+    private:
+        std::unique_ptr<unsigned char>  buffer;
+        uint32_t                        length;
+        uint32_t                        bytes_received;
+    
+};
+
+#endif
