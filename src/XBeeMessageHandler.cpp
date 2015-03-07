@@ -152,9 +152,13 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
         // send the fragment, return false if failed
         if (mod.tx(fragment, data_len + HEADER_SIZE) != 0) {
             
+            std::cout << "    - Fragment " << i << " failed" << std::endl;
+            
             delete fragment;
             return false;
         }
+        
+        std::cout << "    + Fragment " << i << " sent" << std::endl;
         
         remaining -= data_len;
     }
