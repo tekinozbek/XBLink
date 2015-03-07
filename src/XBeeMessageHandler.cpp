@@ -82,10 +82,11 @@ void XBeeMessageHandler::parse_packet(struct xbee_pkt** pkt) {
     
     if (msg->is_complete() && callback != nullptr) {
         
+        callback(msg);
+        
         std::cout << "Received sequence [" << std::hex
                   << sequence_id << "]" << std::endl;
-        
-        callback(msg);
+                  
         messages.erase(sequence_id);
     }
     
@@ -152,13 +153,13 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
         // send the fragment, return false if failed
         if (mod.tx(fragment, data_len + HEADER_SIZE) != 0) {
             
-            std::cout << "    - Fragment " << i << " failed" << std::endl;
+            std::cout << "    - Fragment " << (i + 1) << " failed" << std::endl;
             
             delete fragment;
             return false;
         }
         
-        std::cout << "    + Fragment " << i << " sent" << std::endl;
+        std::cout << "    + Fragment " << (i + 1) << " sent" << std::endl;
         
         remaining -= data_len;
     }
