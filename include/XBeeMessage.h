@@ -4,8 +4,7 @@
  * 
  * XBLink - Networking between two computers using XBee modules.
  * 
- * Copyright (C) 2015 Tekin Ozbek <tekin@tekinozbek.com>,
- *                    Benjamin Yan <benjamin.yan@carleton.ca>
+ * Copyright (C) 2015 Tekin Ozbek, Benjamin Yan
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,14 +41,6 @@ class XBeeMessage {
          */
         XBeeMessage(uint32_t length);
         
-        /* DESTRUCTOR
-         *      ~XBeeMessage
-         * 
-         * DESCRIPTION
-         *      Deallocates buffer memory.
-         */
-        ~XBeeMessage();
-        
         /* FUNCTION
          *      write
          * 
@@ -61,7 +52,7 @@ class XBeeMessage {
          *      pos     The position in the message where writing will begin.
          *      n       Number of bytes to copy from buf to this message.
          */
-        void write(const unsigned char* buf, uint32_t pos, uint32_t n);
+        void write(const char* buf, uint32_t pos, uint32_t n);
         
         /* FUNCTION
          *      get_buffer
@@ -69,32 +60,38 @@ class XBeeMessage {
          * RETURN VALUE
          *      Returns pointer to the buffer.
          */
-        const unsigned char* get_buffer() const;
+        const char* get_buffer() const;
         
         /* FUNCTION
          *      get_length
          * 
          * RETURN VALUE
-         *      Returns the expected length of the message.
+         *      Returns the expected (allocated) length of the message.
          */
         uint32_t get_length() const;
         
         /* FUNCTION
-         *      get_bytes_received
+         *      get_curr_length
          * 
          * RETURN VALUE
-         *      Returns the number of bytes received. This value may be less
-         *      than length if the message is part of a multipart sequence that
-         *      has not fully arrived yet.
+         *      Returns the number of bytes written to the buffer.
          */
-        uint32_t get_bytes_received() const;
+        uint32_t get_curr_length() const;
+        
+        /* FUNCTION
+         *      is_complete
+         * 
+         * RETURN VALUE
+         *      Returns true if message is complete, false otherwise.
+         */
+        bool is_complete() const;
         
         XBeeMessage() = delete;
 
     private:
-        std::unique_ptr<unsigned char>  buffer;
-        uint32_t                        length;
-        uint32_t                        bytes_received;
+        std::shared_ptr<char>   buffer;
+        uint32_t                length;
+        uint32_t                curr_length;
     
 };
 

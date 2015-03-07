@@ -1,6 +1,6 @@
 INCL = -I include/ -I libxbee/
 
-OBJ = XBeeModule.o
+OBJ = XBeeModule.o XBeeMessage.o XBeeMessageHandler.o
 
 compile: $(OBJ)
 	g++ --std=c++11 $(INCL) $^ main.cpp -lxbee

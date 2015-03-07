@@ -4,8 +4,7 @@
  * 
  * XBLink - Networking between two computers using XBee modules.
  * 
- * Copyright (C) 2015 Tekin Ozbek <tekin@tekinozbek.com>,
- *                    Benjamin Yan <benjamin.yan@carleton.ca>
+ * Copyright (C) 2015 Tekin Ozbek, Benjamin Yan
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,18 +29,14 @@
 #include <XBeeMessage.h>
 
 XBeeModule::XBeeModule(std::string type, std::string device, uint32_t baud) {
-    
-    /* series 1 is 100 bytes, series 2 is 72 bytes. this is required so that
-     * we can send a larger payload in multiple packets. */
-    max_packet_length = type == "xbeeZB" ? 72 : 100;
-    
+
     last_error = xbee_setup(&xbee, type.c_str(), device.c_str(), baud);
 }
 
 XBeeModule::~XBeeModule() {
     
-    if (xbee_connection != nullptr)
-        xbee_conEnd(xbee_connection);
+    if (connection != nullptr)
+        xbee_conEnd(connection);
         
     xbee_shutdown(xbee);
 }
@@ -60,25 +55,41 @@ void XBeeModule::open_connection(std::string mode,
                                  uint64_t address,
                                  rx_handler_f callback) {
                                      
-    /* convert address into xbee_conAddress structure */
-    struct xbee_conAddress dest_addr;
-    memset(&dest_addr, 0, sizeof(dest_addr));
-    dest_addr.addr64_enabled = 1;
+    if (mode != "Local AT") {
     
-    /* get each byte from address into the struct */
-    for (auto i = 7; i >= 0; i--) {
+        /* convert address into xbee_conAddress structure */
+        struct xbee_conAddress dest_addr;
+        memset(&dest_addr, 0, sizeof(dest_addr));
+        dest_addr.addr64_enabled = 1;
         
-        dest_addr.addr64[i] = (unsigned char)(address & 0xFF);
-        address >>= 8;
+        /* convert 64 bit unsigned integer to addr64 array format */
+        for (auto i = 7; i >= 0; i--) {
+            
+            dest_addr.addr64[i] = (unsigned char)(address & 0xFF);
+            address >>= 8;
+        }
+         
+        last_error = xbee_conNew(xbee, &connection, mode.c_str(), &dest_addr);
     }
-     
-    last_error = xbee_conNew(xbee, &xbee_connection, mode.c_str(), &dest_addr);
     
+    /* For Local AT connections, destination address must be nullptr */
+    else {
+        
+        last_error = xbee_conNew(xbee, &connection, mode.c_str(), nullptr);
+    }
+        
     if (last_error == XBEE_ENONE)
-        xbee_conCallbackSet(xbee_connection, callback, nullptr);
+        xbee_conCallbackSet(connection, callback, nullptr);
 }
 
-void XBeeModule::tx(XBeeMessage& msg) {
+int XBeeModule::tx(const char* buf, unsigned int len) {
     
-    // TODO: write this
+    // this return value depends on the module. check the datasheet
+    unsigned char ret;
+    
+    last_error = xbee_connTx(
+        connection,&ret, reinterpret_cast<const unsigned char *>(buf), len
+    );
+    
+    return ret;
 }

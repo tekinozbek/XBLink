@@ -4,8 +4,7 @@
  * 
  * XBLink - Networking between two computers using XBee modules.
  * 
- * Copyright (C) 2015 Tekin Ozbek <tekin@tekinozbek.com>,
- *                    Benjamin Yan <benjamin.yan@carleton.ca>
+ * Copyright (C) 2015 Tekin Ozbek, Benjamin Yan
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +26,10 @@
 
 #include <map>
 #include <cstdint>
+#include <functional>
 
 #include <XBeeMessage.h>
+#include <XBeeModule.h>
 #include <xbee.h>
 
 class XBeeMessageHandler {
@@ -38,10 +39,18 @@ class XBeeMessageHandler {
          *      XBeeMessageHandler
          * 
          * PARAMETERS
-         *      callback    This function is invoked when a full XBeeMessage
-         *                  is received.
+         *      max_payload_len Maximum length of the payload. This must be
+         *                      equal on both the transmitting and the
+         *                      receiving end. Must be greater than 6 bytes
+         *                      since the first 6 bytes of the payload is used
+         *                      as header.
+         *      callback        This function is invoked when a full XBeeMessage
+         *                      is received. The parameter to this function
+         *                      is a pointer to an XBeeMessage, which should be
+         *                      freed when done.
          */
-        XBeeMessageHandler(std::function<void(XBeeMessage)> callback);
+        XBeeMessageHandler(unsigned int max_payload_len,
+                           std::function<void (XBeeMessage *)> callback);
     
         /* FUNCTION
          *      parse_packet
@@ -54,16 +63,44 @@ class XBeeMessageHandler {
          *      called until the entirety of message is received.
          * 
          * PARAMETERS
-         *      pkt         The xbee_pkt that has arrived.
+         *      pkt             The xbee_pkt that has arrived.
          */
         void parse_packet(struct xbee_pkt** pkt);
         
-        XBeeMessageHandler() = delete;
+        /* FUNCTION
+         *      send_message
+         * 
+         * DESCRIPTION
+         *      Sends an XBeeMessage to the recipient. If the data is large,
+         *      it is sent as fragments which will be reassembled by the
+         *      XBeeMessageHandler on the receiving end.
+         * 
+         * PARAMETERS
+         *      mod             The XBeeModule that will be used to transmit
+         *                      the message.
+         *      msg             The message that will be transmitted. If large,
+         *                      it will be sent as fragments.
+         * 
+         * RETURN VALUES
+         *      Returns true if sent successfully, false otherwise. If any
+         *      fragment of the message fails to send, this function will return
+         *      false. There is no re-transmission attempt since XBee modules
+         *      themselves attempt several times before quitting.
+         */
+        bool send_message(XBeeModule& mod, XBeeMessage msg) const;
+
+        /* STATIC CONSTANT DATA MEMBER
+         *      HEADER_SIZE
+         * 
+         * DESCRIPTION
+         *      The number of bytes used as header to each payload.
+         */
+        static const unsigned int HEADER_SIZE = 8;
 
     private:
-        std::map<uint16_t, XBeeMessage>     messages;
-        std::function<void(XBeeMessage)>    callback;
-    
+        std::map<uint16_t, XBeeMessage *>   messages;
+        std::function<void (XBeeMessage *)> callback;
+        unsigned int                        max_payload_len;
 };
 
 #endif

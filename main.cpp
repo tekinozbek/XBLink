@@ -1,8 +1,7 @@
 /* 
  * XBLink - Networking between two computers using XBee modules.
  * 
- * Copyright (C) 2015 Tekin Ozbek <tekin@tekinozbek.com>,
- *                    Benjamin Yan <benjamin.yan@carleton.ca>
+ * Copyright (C) 2015 Tekin Ozbek, Benjamin Yan
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +23,15 @@
  
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 #include <unistd.h>
+#include <memory>
 
 #include <XBeeModule.h>
 #include <XBeeMessageHandler.h>
+#include <XBeeMessage.h>
+
+using namespace std;
 
 XBeeMessageHandler* handler;
 
@@ -42,10 +46,19 @@ void rx_handler(struct xbee* xbee,
     handler->parse_packet(pkt);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     
     //XBeeModule module("xbeeZB", "/dev/ttyS1", 57600);
     //module.open_connection("Data", 0x0013A200409E0550, rx_handler);
+    
+    XBeeModule module("xbeeZB", "/dev/ttyS2", 57600);
+    module.open_connection("Data", 0x0013A200409879A0, rx_handler);
+    
+    handler = new XBeeMessageHandler(50, [] (XBeeMessage* msg) -> void {
+        
+        // TODO: Handle message here.
+        delete msg;
+    });
 
     return 0;
 }

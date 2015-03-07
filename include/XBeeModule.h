@@ -4,8 +4,7 @@
  * 
  * XBLink - Networking between two computers using XBee modules.
  * 
- * Copyright (C) 2015 Tekin Ozbek <tekin@tekinozbek.com>,
- *                    Benjamin Yan <benjamin.yan@carleton.ca>
+ * Copyright (C) 2015 Tekin Ozbek, Benjamin Yan
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,20 +49,13 @@ class XBeeModule {
          *      block       The path to the devide (/dev/ttyUSB0, /dev/ttyS1, etc.).
          *      baud        The baud rate of the module.
          */
-        XBeeModule(std::string type,
-                   std::string device,
-                   uint32_t baud);
+        XBeeModule(std::string type, std::string device, uint32_t baud);
                    
         /* DESTRUCTOR
          *      ~XBeeModule
          * 
          * DESCRIPTION
-         *      Releases all allocated memory.
-         * 
-         * PARAMETERS
-         *      type        Type of module (xbee1, xbeeZB, etc.).
-         *      block       The path to the devide (/dev/ttyUSB0, /dev/ttyS1, etc.).
-         *      baud        The baud rate of the module.
+         *      Ends connection and releases all allocated memory.
          */
         ~XBeeModule();
         
@@ -75,7 +67,7 @@ class XBeeModule {
          *      then address can be a nullptr.
          * 
          * PARAMETERS
-         *      mode        The connection mode.
+         *      mode        The connection mode (case sensitive).
          *      address     Destination module address (0x0013A2... 8 bytes).
          *      callback    This callback function is invoked when a packet is
          *                  received.
@@ -91,9 +83,19 @@ class XBeeModule {
          *      Transmits data to the recipient module.
          * 
          * PARAMETERS
-         *      msg     The message as XBeeMessage object.
+         *      buf         The buffer that contains the data.
+         *      len         Number of bytes to be read and transmitted from the
+         *                  buffer. Should not exceed the maximum payload length
+         *                  of your module.
+         * 
+         * RETURN VALUES
+         *      Returns the return value provided by the module (cascades from
+         *      libxbee). It should be safe to assume that the function was
+         *      successful if the value is zero, or has failed if non-zero.
+         * 
+         *      *** NEEDS TO BE VERIFIED ***
          */
-        void tx(XBeeMessage& msg);
+        int tx(const char* buf, unsigned int len);
         
         /* FUNCTION
          *      get_last_error
@@ -115,9 +117,8 @@ class XBeeModule {
         
     private:
         struct xbee*        xbee = nullptr;
-        struct xbee_con*    xbee_connection = nullptr;
+        struct xbee_con*    connection = nullptr;
         xbee_err            last_error;
-        uint8_t             max_packet_length;
      
 };
  
