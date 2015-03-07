@@ -25,11 +25,46 @@
 #include <cstring>
 #include <cstdio>
 #include <unistd.h>
+#include <cstdint>
 #include <memory>
 
 #include <XBeeModule.h>
 #include <XBeeMessageHandler.h>
 #include <XBeeMessage.h>
+
+#include <linux/if_tun.h>
+#include <net/if.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
+/* from linux kernel docs */
+int tun_alloc(char *dev)
+{
+  struct ifreq ifr;
+  int fd, err;
+
+  if( (fd = open("/dev/net/tun", O_RDWR)) < 0 )
+     return -1;
+
+  memset(&ifr, 0, sizeof(ifr));
+
+  /* Flags: IFF_TUN   - TUN device (no Ethernet headers) 
+   *        IFF_TAP   - TAP device  
+   *
+   *        IFF_NO_PI - Do not provide packet information  
+   */ 
+  ifr.ifr_flags = IFF_TUN | IFF_NO_PI; 
+  if( *dev )
+     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ){
+     close(fd);
+     return -2;
+  }
+
+  return fd;
+}  
 
 using namespace std;
 
@@ -48,24 +83,43 @@ void rx_handler(struct xbee* xbee,
 
 int main(int argc, char* argv[]) {
     
-    //XBeeModule module("xbeeZB", "/dev/ttyS1", 57600);
-    //module.open_connection("Data", 0x0013A200409E0550, rx_handler);
-    
-    XBeeModule module("xbeeZB", "/dev/ttyS2", 57600);
-    module.open_connection("Data", 0x0013A200409879A0, rx_handler);
-    
-    handler = new XBeeMessageHandler(2, [] (XBeeMessage* msg) -> void {
+    /* argv[ ]
+     *      1:  path to device (e.g. /dev/ttyS1, /dev/ttyUSB0, etc.)
+     *      2:  destination address as 64 bit hexadecimal
+     *      3:  TUN device name (tun23, tun88, whatever)
+     */
+    if (argc < 4) {
         
-        // TODO: Handle message here.
-        string s(msg->get_buffer(), msg->get_curr_length());
-        cout << s << endl;
+        cout << "usage: " << argv[0] << " [device] [address] [tun]" << endl;
+        return -1;
+    }
+    
+    /* open a tun device */
+    int fd = tun_alloc(argv[3]);
+    
+    /* set up connection to module and open connection with remote device */
+    XBeeModule module("xbeeZB", argv[1], 57600);
+    module.open_connection(
+        "Data",
+        (uint64_t)std::stoull(argv[2], nullptr, 16),
+        rx_handler
+    );
+    
+    /* set up the message handler */
+    handler = new XBeeMessageHandler(72, [&fd] (XBeeMessage* msg) -> void {
+        
+        write(fd, msg->get_buffer(), msg->get_curr_length());
         delete msg;
     });
     
-    if (argc > 1) {
-        
-        XBeeMessage msg(strlen(argv[1]));
-        msg.write(argv[1], 0, strlen(argv[1]));
+    /* read from the tun device */
+    char buf[1500];
+    int read_size = 0;
+    
+    while ((read_size = read(fd, buf, 1500)) >= 0) {
+    
+        XBeeMessage msg(read_size);
+        msg.write(buf, 0, read_size);
         handler->send_message(module, msg);
     }
 
