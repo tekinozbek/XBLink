@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
      *      1:  path to device (e.g. /dev/ttyS1, /dev/ttyUSB0, etc.)
      *      2:  destination address as 64 bit hexadecimal
      *      3:  TUN device name (tun23, tun88, whatever)
+     *      4:  ip address in CIDR format (10.0.0.2/24)
      */
     if (argc < 4) {
         
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]) {
     int fd = tun_alloc(argv[3]);
     
     /* set up connection to module and open connection with remote device */
-    XBeeModule module("xbeeZB", argv[1], 57600);
+    XBeeModule module("xbeeZB", argv[1], 9600);
     module.open_connection(
         "Data",
         (uint64_t)std::stoull(argv[2], nullptr, 16),
