@@ -24,7 +24,7 @@
 #ifndef XBLINK_XBEEMESSAGEHANDLER_H
 #define XBLINK_XBEEMESSAGEHANDLER_H
 
-#include <map>
+#include <unordered_map>
 #include <cstdint>
 #include <functional>
 
@@ -41,9 +41,7 @@ class XBeeMessageHandler {
          * PARAMETERS
          *      max_payload_len Maximum length of the payload. This must be
          *                      equal on both the transmitting and the
-         *                      receiving end. Must be greater than 6 bytes
-         *                      since the first 6 bytes of the payload is used
-         *                      as header.
+         *                      receiving end. Must be greater than HEADER_SIZE.
          *      callback        This function is invoked when a full XBeeMessage
          *                      is received. The parameter to this function
          *                      is a pointer to an XBeeMessage, which should be
@@ -98,9 +96,9 @@ class XBeeMessageHandler {
         static const unsigned int HEADER_SIZE = 8;
 
     private:
-        std::map<uint16_t, XBeeMessage *>   messages;
-        std::function<void (XBeeMessage *)> callback;
-        unsigned int                        max_payload_len;
+        std::unordered_map<uint16_t, XBeeMessage *>   messages;
+        std::function<void (XBeeMessage *)>           callback;
+        unsigned int                                  max_payload_len;
 };
 
 #endif

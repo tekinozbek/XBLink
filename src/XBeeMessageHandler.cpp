@@ -22,6 +22,7 @@
  */
 
 #include <functional>
+#include <unordered_map>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -34,7 +35,13 @@
 XBeeMessageHandler::XBeeMessageHandler(
     unsigned int max_payload_len,
     std::function<void (XBeeMessage *)> callback
-) : callback(callback), max_payload_len(max_payload_len) { }
+) : callback(callback) {
+    
+    if (max_payload_len <= HEADER_SIZE)
+        throw std::invalid_argument("Maximum payload length too small.");
+        
+    this->max_payload_len = max_payload_len;
+}
 
 void XBeeMessageHandler::parse_packet(struct xbee_pkt** pkt) {
     

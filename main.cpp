@@ -54,11 +54,20 @@ int main(int argc, char* argv[]) {
     XBeeModule module("xbeeZB", "/dev/ttyS2", 57600);
     module.open_connection("Data", 0x0013A200409879A0, rx_handler);
     
-    handler = new XBeeMessageHandler(50, [] (XBeeMessage* msg) -> void {
+    handler = new XBeeMessageHandler(2, [] (XBeeMessage* msg) -> void {
         
         // TODO: Handle message here.
+        string s(msg->get_buffer(), msg->get_curr_length());
+        cout << s << endl;
         delete msg;
     });
+    
+    if (argc > 1) {
+        
+        XBeeMessage msg(strlen(argv[1]));
+        msg.write(argv[1], 0, strlen(argv[1]));
+        handler->send_message(module, msg);
+    }
 
     return 0;
 }
