@@ -85,7 +85,7 @@ void XBeeMessageHandler::parse_packet(struct xbee_pkt** pkt) {
         callback(msg);
         
         std::cout << "Received sequence [" << std::hex
-                  << sequence_id << "]" << std::endl;
+                  << sequence_id << "]" << std::dec << std::endl;
                   
         messages.erase(sequence_id);
     }
@@ -132,7 +132,7 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
     uint32_t length     = msg.get_curr_length(); // total length
     
     std::cout << "Sending sequence ["
-              << std::hex << sequence_id << "]" << std::endl;
+              << std::hex << sequence_id << "]" << std::dec << std::endl;
     
     for (uint16_t i = 0; i < num_fragments; ++i) {
          
@@ -154,15 +154,15 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
         // send the fragment, return false if failed
         if (mod.tx(fragment, data_len + HEADER_SIZE) != 0) {
             
-            std::cout << "    - Fragment "
-                      << static_cast<int>(i + 1) << " failed" << std::endl;
+            std::cout << "    - Fragment " << static_cast<int>(i + 1)
+                      << " failed" << std::endl;
             
             delete fragment;
             return false;
         }
         
-        std::cout << "    + Fragment "
-                  << static_cast<int>(i + 1) << " sent" << std::endl;
+        std::cout << "    + Fragment " << static_cast<int>(i + 1)
+                  << " sent" << std::endl;
         
         remaining -= data_len;
     }
