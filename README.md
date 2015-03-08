@@ -51,9 +51,8 @@ is the IP in CIDR format (e.g. 10.0.0.1/24 for first computer and 10.0.0.2/24
 for the second one).
 
 ## Credits
-[libxbee](https://code.google.com/p/libxbee/) is licensed under LGPL.
-
-[tun_alloc](https://www.kernel.org/doc/Documentation/networking/tuntap.txt) from
+* [libxbee](https://code.google.com/p/libxbee/) is licensed under LGPL.
+* [tun_alloc](https://www.kernel.org/doc/Documentation/networking/tuntap.txt) from
 the Linux kernel documentations.
 
 ## License
