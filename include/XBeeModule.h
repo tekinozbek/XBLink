@@ -49,7 +49,7 @@ class XBeeModule {
          *      block       The path to the devide (/dev/ttyUSB0, /dev/ttyS1, etc.).
          *      baud        The baud rate of the module.
          */
-        XBeeModule(std::string type, std::string device, uint32_t baud);
+        XBeeModule(std::string type, std::string device, int baud);
                    
         /* DESTRUCTOR
          *      ~XBeeModule

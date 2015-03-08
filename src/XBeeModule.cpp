@@ -28,7 +28,7 @@
 #include <XBeeModule.h>
 #include <XBeeMessage.h>
 
-XBeeModule::XBeeModule(std::string type, std::string device, uint32_t baud) {
+XBeeModule::XBeeModule(std::string type, std::string device, int baud) {
 
     last_error = xbee_setup(&xbee, type.c_str(), device.c_str(), baud);
 }
@@ -65,7 +65,7 @@ void XBeeModule::open_connection(std::string mode,
         /* convert 64 bit unsigned integer to addr64 array format */
         for (auto i = 7; i >= 0; i--) {
             
-            dest_addr.addr64[i] = (unsigned char)(address & 0xFF);
+            dest_addr.addr64[i] = static_cast<unsigned char>(address & 0xFF);
             address >>= 8;
         }
          
@@ -88,7 +88,7 @@ int XBeeModule::tx(const char* buf, unsigned int len) {
     unsigned char ret;
     
     last_error = xbee_connTx(
-        connection,&ret, reinterpret_cast<const unsigned char *>(buf), len
+        connection, &ret, reinterpret_cast<const unsigned char *>(buf), len
     );
     
     return ret;

@@ -106,7 +106,8 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
     
     // determine number of fragments required for the message
     uint16_t num_fragments = ceil(
-        ((double)msg.get_curr_length() / (double)usable_payload_len)
+        static_cast<double>(msg.get_curr_length()) / 
+        static_cast<double>(usable_payload_len)
     );
     
     /* the message as a whole is a sequence. so we randomly generate a two byte
@@ -114,7 +115,7 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
      * receiver can identify which fragment belongs to which message. */
     uint16_t sequence_id;
     
-    std::ifstream frand("/dev/random", std::ios::in | std::ios::binary);
+    std::ifstream frand("/dev/urandom", std::ios::in | std::ios::binary);
     frand.read((char *)&sequence_id, sizeof(sequence_id));
     frand.close();
     
@@ -130,7 +131,7 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
     uint32_t remaining  = msg.get_curr_length(); // remaining to be sent
     uint32_t length     = msg.get_curr_length(); // total length
     
-    std::cout << "Sending " << num_fragments << " fragments ["
+    std::cout << "Sending sequence ["
               << std::hex << sequence_id << "]" << std::endl;
     
     for (uint16_t i = 0; i < num_fragments; ++i) {
@@ -153,13 +154,15 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
         // send the fragment, return false if failed
         if (mod.tx(fragment, data_len + HEADER_SIZE) != 0) {
             
-            std::cout << "    - Fragment " << (i + 1) << " failed" << std::endl;
+            std::cout << "    - Fragment "
+                      << static_cast<int>(i + 1) << " failed" << std::endl;
             
             delete fragment;
             return false;
         }
         
-        std::cout << "    + Fragment " << (i + 1) << " sent" << std::endl;
+        std::cout << "    + Fragment "
+                  << static_cast<int>(i + 1) << " sent" << std::endl;
         
         remaining -= data_len;
     }
