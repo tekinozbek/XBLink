@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
     }
     
     /* set up connection to module and open connection with remote device */
-    XBeeModule module(argv[2], argv[1], std::stoi(argv[3], nullptr, 16));
+    XBeeModule module(argv[2], argv[1], std::stoi(argv[3], nullptr, 10));
     module.open_connection(
         "Data",
         (uint64_t)std::stoull(argv[4], nullptr, 16),
