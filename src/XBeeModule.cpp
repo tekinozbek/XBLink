@@ -1,7 +1,4 @@
-/* File     : XBeeModule.cpp
- * Author(s): Tekin Ozbek <tekin@tekinozbek.com>
- * 
- * 
+/* 
  * XBLink - Networking between two computers using XBee modules.
  * 
  * Copyright (C) 2015 Tekin Ozbek, Benjamin Yan
