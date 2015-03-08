@@ -31,40 +31,7 @@
 #include <XBeeModule.h>
 #include <XBeeMessageHandler.h>
 #include <XBeeMessage.h>
-
-#include <linux/if_tun.h>
-#include <net/if.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-
-/* from linux kernel docs */
-int tun_alloc(char *dev)
-{
-  struct ifreq ifr;
-  int fd, err;
-
-  if( (fd = open("/dev/net/tun", O_RDWR)) < 0 )
-     return -1;
-
-  memset(&ifr, 0, sizeof(ifr));
-
-  /* Flags: IFF_TUN   - TUN device (no Ethernet headers) 
-   *        IFF_TAP   - TAP device  
-   *
-   *        IFF_NO_PI - Do not provide packet information  
-   */ 
-  ifr.ifr_flags = IFF_TUN | IFF_NO_PI; 
-  if( *dev )
-     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-
-  if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ){
-     close(fd);
-     return -2;
-  }
-
-  return fd;
-}  
+#include <tunnel.h>
 
 using namespace std;
 
@@ -85,23 +52,32 @@ int main(int argc, char* argv[]) {
     
     /* argv[ ]
      *      1:  path to device (e.g. /dev/ttyS1, /dev/ttyUSB0, etc.)
-     *      2:  destination address as 64 bit hexadecimal
-     *      3:  TUN device name (tun23, tun88, whatever)
+     *      2:  module type
+     *      3:  baud rate
+     *      4:  destination address as 64 bit hexadecimal
+     *      5:  TUN device name (tun23, tun88, whatever)
      */
     if (argc < 4) {
         
-        cout << "usage: " << argv[0] << " [device] [address] [tun]" << endl;
+        cout << "usage: " << argv[0] << " [device path] [type] [baud] "
+             << "[dest address] [tun device]" << endl;
         return -1;
     }
     
     /* open a tun device */
-    int fd = tun_alloc(argv[3]);
+    int fd = tun_alloc(argv[5]);
+    
+    if (fd < 0) {
+        
+        cout << "unable to open tun device" << endl;
+        return -2;
+    }
     
     /* set up connection to module and open connection with remote device */
-    XBeeModule module("xbeeZB", argv[1], 115200);
+    XBeeModule module(argv[2], argv[1], std::stoi(argv[3], nullptr, 16));
     module.open_connection(
         "Data",
-        (uint64_t)std::stoull(argv[2], nullptr, 16),
+        (uint64_t)std::stoull(argv[4], nullptr, 16),
         rx_handler
     );
     
