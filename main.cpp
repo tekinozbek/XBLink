@@ -73,13 +73,27 @@ int main(int argc, char* argv[]) {
         return -2;
     }
     
-    /* set up connection to module and open connection with remote device */
+    /* set up the module */
     XBeeModule module(argv[2], argv[1], std::stoi(argv[3], nullptr, 10));
+    
+    if (module.get_last_error() != XBEE_ENONE) {
+        
+        cout << module.get_last_error_str() << endl;
+        return -3;
+    }
+    
+    /* open a connection with the remote device */
     module.open_connection(
         "Data",
         (uint64_t)std::stoull(argv[4], nullptr, 16),
         rx_handler
     );
+    
+    if (module.get_last_error() != XBEE_ENONE) {
+        
+        cout << module.get_last_error_str() << endl;
+        return -4;
+    }
     
     /* set up the message handler */
     handler = new XBeeMessageHandler(72, [&fd] (XBeeMessage* msg) -> void {
