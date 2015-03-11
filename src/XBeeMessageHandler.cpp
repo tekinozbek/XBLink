@@ -97,7 +97,7 @@ void XBeeMessageHandler::parse_packet(struct xbee_pkt** pkt) {
         delete msg;
 }
 
-bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
+bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage &msg) const {
     
     // determine the usable payload length
     unsigned int usable_payload_len = max_payload_len - HEADER_SIZE;
@@ -160,7 +160,7 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
             std::cout << "    - Fragment " << static_cast<int>(i + 1)
                       << " failed" << std::endl;
             
-            delete fragment;
+            delete [] fragment;
             return false;
         }
         
@@ -170,7 +170,7 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
         remaining -= data_len;
     }
      
-    delete fragment;
+    delete [] fragment;
     
     return true;
 }

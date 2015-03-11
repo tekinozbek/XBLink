@@ -82,7 +82,7 @@ class XBeeMessageHandler {
          *      false. There is no re-transmission attempt since XBee modules
          *      themselves attempt several times before quitting.
          */
-        bool send_message(XBeeModule& mod, XBeeMessage msg) const;
+        bool send_message(XBeeModule& mod, XBeeMessage &msg) const;
 
         /* STATIC CONSTANT DATA MEMBER
          *      HEADER_SIZE

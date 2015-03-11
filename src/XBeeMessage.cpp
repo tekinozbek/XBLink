@@ -24,7 +24,8 @@
 #include <XBeeMessage.h>
 
 XBeeMessage::XBeeMessage(uint32_t length)
-    : buffer(new char[length]), length(length), curr_length(0) { }
+    : buffer(new char[length], std::default_delete<char[]>()),
+      length(length), curr_length(0) { }
     
 void XBeeMessage::write(const char* buf, uint32_t pos, uint32_t n) {
     
