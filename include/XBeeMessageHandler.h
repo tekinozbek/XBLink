@@ -90,7 +90,7 @@ class XBeeMessageHandler {
          * DESCRIPTION
          *      The number of bytes used as header to each payload.
          */
-        static const unsigned int HEADER_SIZE = 6;
+        static const unsigned int HEADER_SIZE = 8;
 
     private:
         std::unordered_map<uint16_t, XBeeMessage *>   messages;

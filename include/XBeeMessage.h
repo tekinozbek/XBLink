@@ -38,6 +38,8 @@ class XBeeMessage {
          */
         XBeeMessage(uint32_t length);
         
+        XBeeMessage(
+        
         /* FUNCTION
          *      write
          * 
