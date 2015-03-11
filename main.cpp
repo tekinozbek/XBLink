@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
      *      4:  destination address as 64 bit hexadecimal
      *      5:  TUN device name (tun23, tun88, whatever)
      */
-    if (argc < 4) {
+    if (argc < 6) {
         
         cout << "usage: " << argv[0] << " [device path] [type] [baud] "
              << "[dest address] [tun device]" << endl;
