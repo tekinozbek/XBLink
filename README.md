@@ -7,8 +7,8 @@ modules. The aim is to send IP packets through TUN devices to create a network.
 * Linux with access to /dev/net/tun and /dev/urandom (you will also need super
 user permissions for `ip` commands).
 * g++ >= 4.7 for C++11 (modify makefile if you are using some other compiler).
-* [libxbee](https://code.google.com/p/libxbee/) installed in a place where g++
-can find it.
+* [libxbee 3.0.11](https://code.google.com/p/libxbee/) installed in a place
+where g++ can find it.
 
 ### XBee Configuration
 Configure your modules using [X-CTU](http://www.digi.com/support/productdetail?pid=3352&type=utilities)

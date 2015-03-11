@@ -42,21 +42,27 @@ XBeeMessageHandler::XBeeMessageHandler(
 
 void XBeeMessageHandler::parse_packet(struct xbee_pkt** pkt) {
     
-    // technically, a proper message should be at least 8 bytes
-    if ((*pkt)->dataLen < 8)
+    // technically, a proper message should be at least header size
+    if ((*pkt)->dataLen < HEADER_SIZE)
         return;
         
     // determine the usable payload length
     unsigned int usable_payload_len = max_payload_len - HEADER_SIZE;
     
+    /* there is a design issue here. we either send 4 bytes total length with
+     * every payload or 2 bytes of number of fragments. if we send number of
+     * fragments, if the last fragment is not full, the recipient wastes at most
+     * usable_payload_len - 1 space.
+     */
+    
     // extract headers from the packet    
     uint16_t sequence_id;
-    uint32_t length;
+    uint16_t num_fragments;
     uint16_t fragment;
     
     memcpy(&sequence_id, (*pkt)->data, 2);
-    memcpy(&length, (*pkt)->data + 2, 4);
-    memcpy(&fragment, (*pkt)->data + 6, 2);
+    memcpy(&num_fragments, (*pkt)->data + 2, 2);
+    memcpy(&fragment, (*pkt)->data + 4, 2);
     
     auto search = messages.find(sequence_id);
     
@@ -68,11 +74,13 @@ void XBeeMessageHandler::parse_packet(struct xbee_pkt** pkt) {
     
     /* nope, this is a new sequence, add it to the map */
     else
-        messages[sequence_id] = msg = new XBeeMessage(length);
+        messages[sequence_id] = msg = new XBeeMessage(
+            num_fragments * usable_payload_len
+        );
     
     // write the data that has arrived
     msg->write(
-        reinterpret_cast<const char *>((*pkt)->data) + 8,
+        reinterpret_cast<const char *>((*pkt)->data) + HEADER_SIZE,
         fragment * usable_payload_len,
         (*pkt)->dataLen - HEADER_SIZE
     );
@@ -118,7 +126,7 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
     
     /* transmit each fragment one by one with the following headers:
      * 
-     * | id (2 bytes) | length (4 bytes) | offset (2 bytes) | ... |
+     * | id (2 bytes) | num fragments (2 bytes) | offset (2 bytes) | ... |
      * 
      * if any fragment fails, the function does not attempt to re-transmit and
      * returns false. XBee modules themselves re-try transmission upon failure.
@@ -126,24 +134,23 @@ bool XBeeMessageHandler::send_message(XBeeModule& mod, XBeeMessage msg) const {
     const char* msg_buf = static_cast<const char *>(msg.get_buffer());
     char* fragment      = new char[max_payload_len];
     uint32_t remaining  = msg.get_curr_length(); // remaining to be sent
-    uint32_t length     = msg.get_curr_length(); // total length
     
     std::cout << "Sending sequence ["
               << std::hex << sequence_id << "]" << std::dec << std::endl;
     
     for (uint16_t i = 0; i < num_fragments; ++i) {
          
-        // insert sequence id, total length and fragment offset
+        // insert sequence id, number of fragments and fragment offset
         memcpy(fragment, &sequence_id, 2);
-        memcpy(fragment + 2, &length, 4);
-        memcpy(fragment + 6, &i, 2);
+        memcpy(fragment + 2, &num_fragments, 2);
+        memcpy(fragment + 4, &i, 2);
         
         // this is the length of the data we're sending after the headers
         int data_len = remaining > usable_payload_len ?
                                       usable_payload_len : remaining;
                                     
         memcpy(
-            fragment + 8,
+            fragment + HEADER_SIZE,
             msg_buf + (i * usable_payload_len),
             data_len
         );
