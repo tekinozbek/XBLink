@@ -19,6 +19,7 @@
  */
 
 #include <functional>
+#include <cassert>
 #include <unordered_map>
 #include <cmath>
 #include <cstring>
@@ -34,8 +35,7 @@ XBeeMessageHandler::XBeeMessageHandler(
     std::function<void (XBeeMessage *)> callback
 ) : callback(callback) {
     
-    if (max_payload_len <= HEADER_SIZE)
-        throw std::invalid_argument("Maximum payload length too small.");
+    assert(max_payload_len > HEADER_SIZE);
         
     this->max_payload_len = max_payload_len;
 }
